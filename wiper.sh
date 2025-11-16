@@ -336,7 +336,7 @@ fn_frozen() {
                     sleep 1
                     rtcwake -m mem -s 5
                 fi
-                if [[ $i -gt $times ]];then
+                if [[ $i -ge $times ]];then
                     echo -n "Tried unfreezing $device $i times: Continue? [Y/n]: "
                     read answer < /dev/tty
                     i=0
