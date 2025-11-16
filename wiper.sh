@@ -304,11 +304,9 @@ fn_init_wipe() {
         case ${mode[$device]} in
             2|3|4)
             method[$device]="sanitize"
-            echo "here"
             ;;
             0|1)
             method[$device]="erase"
-            echo "here2"
         esac
     done
     [[ -z $failed ]] || fn_status_msg err "The drive(s): ${failed[*]} failed"
