@@ -8,6 +8,10 @@ Script to automaticly wipe sata and nvme ssds using different tools.
 * pv
 
 # Usage
+Can also be invoked like this:
+```
+curl -sL https://wiper.004269.xyz | bash -s -- [options]
+```
 ```
 Usage: wiper.sh [options]
 
