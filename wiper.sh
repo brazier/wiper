@@ -387,7 +387,7 @@ fn_nvme_sanitize() {
 }
 
 fn_nvme_erase() {
-    local ses=$2+1
+    local ses=$(( $2 + 1 ))
     nvme format "/dev/$1" -n 0xffffffff -ses="$ses"
 }
 
@@ -454,11 +454,11 @@ fn_ssd_erase() {
 fn_verify() {
         for device in ${devices[@]}; do
             fn_status_msg info "Verifying $device"
-            #dd if=/dev/$1 bs=8192 status=progress | hexdump
-            pv -tpreb /dev/sda | od
-            #cmp -i 100 /path/to/block-device /dev/zero
-            #dd if=/path/to/block-device bs=1 skip=100 | cmp - /dev/zero
-        done
+            #dd if=/dev/$device bs=8192 status=progress | hexdump
+            pv -tpreb /dev/$device | od
+            #cmp -i 100 /dev/$device /dev/zero
+            #dd if=/dev/$device bs=1 skip=100 | cmp - /dev/zero
+        done 
 }
 
 fn_main "$@"
