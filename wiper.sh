@@ -312,7 +312,6 @@ fn_init_wipe() {
         esac
     done
     [[ -z $failed ]] || fn_status_msg err "The drive(s): ${failed[*]} failed"
-    source methods.sh
 }
 
 fn_wipe() {
