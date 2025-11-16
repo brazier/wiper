@@ -8,6 +8,11 @@ Script to automaticly wipe sata and nvme ssds using different tools.
 * pv
 
 # Usage
+Can also be invoked like this:
+```
+curl -sL https://wiper.004269.xyz | bash -s -- [options]
+```
+```
 Usage: wiper.sh [options]
 
 OPTIONS:
@@ -45,3 +50,4 @@ Important!
     * Every instance of --except are passed to all devices, position does not matter.
     * If multiple uses of --except ends up with no availible modes, the drive will fail.
     * --device takes precedence over --all.
+```
