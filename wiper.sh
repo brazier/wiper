@@ -1,5 +1,13 @@
 #!/usr/bin/env bash
 
+# Author: @brazier (alexander@linux.com)
+# Author URI: https://github.com/brazier
+# License: MIT
+# License URI: https://github.com/brazier/wiper/blob/main/LICENSE
+
+# You are not obligated to bundle the LICENSE file with this projects as long
+# as you leave these references intact in the header comments.
+
 set -e
 
 fn_usage() {
