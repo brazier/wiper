@@ -200,7 +200,7 @@ fn_prog_bar() {
 
 fn_init_devices() {
     if [[ ${#devices[@]} == 0 ]] && [[ -n $list ]] && [[ -z $all ]]; then
-        lsblk -d -o NAME
+        lsblk -d -o name,type,vendor,model
         exit 0
     fi
     if [[ -n $all ]] && [[ ${#devices[@]} == 0 ]]; then
