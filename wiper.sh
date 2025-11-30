@@ -80,7 +80,6 @@ fn_dependencies () {
     for dep in ${deps[@]}; do
         type $dep >/dev/null 2>&1 || { fn_status_msg warn "I require $dep but it's not installed."; local failed=1; }
     done
-    [[ $failed -ne 1 ]] && echo -e "OK\n" || { fn_status_msg err "Install the above and rerun this script. Aborting"; }
 }
 
 fn_parse_params() {
