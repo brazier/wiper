@@ -6,6 +6,7 @@ Script to automaticly wipe sata and nvme ssds using different tools.
 * hdparm
 * od
 * pv
+
 `od` and `pv` can be switched to dd and hexdump by editing [fn_verify](https://github.com/brazier/wiper/blob/main/wiper.sh#L485)
 also remember to edit [fn_dependencies](https://github.com/brazier/wiper/blob/main/wiper.sh#L74)
 
