@@ -330,8 +330,8 @@ fn_frozen() {
         if [[ "$device" == "sd"? ]]; then
             i=1
             times=5
-            local status="$(hdparm -I /dev/$device)"
             while :; do
+                status="$(hdparm -I /dev/$device)" 
                 if [[ $status == *"not"?"frozen"* ]]; then
                     fn_status_msg ok "Not Frozen"
                     break
