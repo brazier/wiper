@@ -6,6 +6,8 @@ Script to automaticly wipe sata and nvme ssds using different tools.
 * hdparm
 * od
 * pv
+`od` and `pv` can be switched to dd and hexdump by editing [fn_verify](https://github.com/brazier/wiper/blob/main/wiper.sh#L485)
+also remember to edit [fn_dependencies](https://github.com/brazier/wiper/blob/main/wiper.sh#L74)
 
 # Usage
 Can also be invoked like this:
@@ -51,3 +53,13 @@ Important!
     * If multiple uses of --except ends up with no availible modes, the drive will fail.
     * --device takes precedence over --all.
 ```
+
+# Roadmap / to-do
+
+ - [ ] Add progressbar to fn_ssd_sanitize()
+ - [ ] Add spinner to fn_nvme_erase()
+ - [ ] Make the script interactive (maybe by using [bash-tui-toolkit](https://github.com/timo-reymann/bash-tui-toolkit))
+ - [ ] Make modes parameter positional so that different modes can be passed to different disks.
+ - [ ] Make a better verify, other than a visual human readeable one.
+
+
