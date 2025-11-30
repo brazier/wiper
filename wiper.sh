@@ -57,7 +57,7 @@ EOF
 fn_main() {
     fn_parse_params "$@" 
     fn_setup_colors
-    fn_dependensies
+    fn_dependencies
     fn_init_devices
     fn_check_support
     fn_frozen
@@ -68,7 +68,7 @@ fn_main() {
     [[ $blkdiscard -eq 1 ]] && fn_blkdiscard
     [[ $verify -eq 1 ]] && fn_verify
 }
-fn_dependensies () {
+fn_dependencies () {
     local deps=(
         "nvme"
         "hdparm"
