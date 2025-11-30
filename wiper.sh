@@ -68,6 +68,9 @@ fn_main() {
     [[ $blkdiscard -eq 1 ]] && fn_blkdiscard
     [[ $verify -eq 1 ]] && fn_verify
 }
+
+#Check dependencies, error and exit if not met. 
+#Remove pv and od if fn_verify changed to dd/hexdump
 fn_dependencies () {
     local deps=(
         "nvme"
@@ -80,9 +83,11 @@ fn_dependencies () {
     for dep in ${deps[@]}; do
         type $dep >/dev/null 2>&1 || { fn_status_msg warn "I require $dep but it's not installed."; local failed=1; }
     done
+    [[ $failed -ne 1 ]] && fn_status_msg ok "Dependencies met" || { fn_status_msg err "Install the above and rerun this script. Aborting";exit 1; }
 }
 
 fn_parse_params() {
+    #Show "usage" if not parameters passed
     [[ $# -eq 0 ]] && fn_usage
 
     #Set defults
@@ -138,7 +143,8 @@ fn_parse_params() {
         shift
     done
 }
-    
+
+#Pretty colours for fn_status_msg
 fn_setup_colors() {
     ANSI_RED="\033[0;31m"
     ANSI_AQUA="\033[38;5;44m"
@@ -170,6 +176,8 @@ fn_status_msg() {
     esac
 }
 
+
+#Last stop before actually wiping
 fn_confirmation() {
     echo -n "Are you sure you want to wipe: ${devices[@]}? [y/N]: "
     if [ "$assume_yes" == 0 ]; then
@@ -183,6 +191,7 @@ fn_confirmation() {
     fi
 }
 
+#Simple progress bar for use with
 fn_prog_bar() {
     local progress=$(($1*100/$2))
     printf '['
@@ -198,38 +207,44 @@ fn_prog_bar() {
     printf "\r"
 }
 
+
+#Lists devices OR maps all devices
+#Even cd-rom if present, and current drive. Needs improving.
 fn_init_devices() {
     if [[ ${#devices[@]} == 0 ]] && [[ -n $list ]] && [[ -z $all ]]; then
         lsblk -d -o name,type,vendor,model
         exit 0
     fi
+    #If --all AND NOT --devices
     if [[ -n $all ]] && [[ ${#devices[@]} == 0 ]]; then
-        mapfile -t devices <<< $(lsblk -d -o NAME)
-        unset 'devices[0]'
+        mapfile -t devices <<< $(lsblk -d -o NAME) #get all block devices
+        unset 'devices[0]' #remove column title "NAME"
     fi
 }
 
+#Get supported modes for the disk
 fn_check_support() {
     declare -Ag modes
     declare -Ag function
+    local features
+
+    #Loop through all devices passed from fn_init_device
     for device in ${devices[@]}; do
-         
         if [[ "$device" == "nvme"?* ]]; then
             function[$device]="fn_nvme"
-            local features
             features="$(nvme id-ctrl -H /dev/$device)" 
         elif [[ "$device" == "sd"? ]]; then
             function[$device]="fn_ssd"
-            local features
             features="$(hdparm -I /dev/$device)"
         else
             echo "Wrong device type $device"
             exit 1
         fi
+
+        #Go through and check for support for each mode 
         echo "SUPPORTED MODES FOR [$device]:"   
         case "$features" in 
 
-            # Sanitize ssd & nvme
             # SSD FEATURE SET | NVME FEATURE SET
             *CRYPTO_SCRAMBLE_EXT* | *"Crypto Erase Sanitize Operation Supported"* )
             echo "[4] Sanitize Crypto Scrable supported"
@@ -246,7 +261,7 @@ fn_check_support() {
             modes[$device]+=2
             ;;&
 
-            # nvme Secure erase (nvme format)
+            # NVMe Secure erase (nvme format)
             *"Crypto Erase Supported"* )
             echo "[1] Crypto Erase Supported as part of Secure Erase"
             modes[$device]+=1
@@ -275,8 +290,8 @@ fn_check_support() {
         fi
         echo -e
     done
-    [[ -z $failed ]] || fn_status_msg err "The drive(s): ${failed[*]} failed"
-    [[ -z $list ]] || exit 0
+    [[ -z $failed ]] || fn_status_msg err "The drive(s): ${failed[*]} failed" #one or more disks had no supported modes
+    [[ -z $list ]] || exit 0 #If we only want to list modes, exit here
 }
 
 fn_init_wipe() {
@@ -316,16 +331,28 @@ fn_init_wipe() {
             method[$device]="erase"
         esac
     done
-    [[ -z $failed ]] || fn_status_msg err "The drive(s): ${failed[*]} failed"
+    [[ -z $failed ]] || fn_status_msg err "The drive(s): ${failed[*]} failed" #one or more disk did not support the mode/method
+
+    #Output some info about additional settings
+    [[ $wipefs -eq 1 ]] && fn_status_msg info "Will run [wipefs] before main wipe"
+    [[ $blkdiscard -eq 1 ]] && fn_status_msg info "Will run [blkdiscard] after main wipe"
+    [[ $verify -eq 0 ]] && fn_status_msg info "Will skip verify"
 }
 
+#Function to call the the correct function for the different disks
 fn_wipe() {
     for device in ${devices[@]}; do
        "${function[$device]}_${method[$device]}" "$device" "${mode[$device]}" ##eg. fn_nvme_sanitize nvme0 4
     done
 }
 
+#Check if disk is frozen (SATA ssd)
 fn_frozen() {
+    local status
+    local i
+    local times
+
+    #Go through array to check if the match sd*
     for device in ${devices[@]}; do
         if [[ "$device" == "sd"? ]]; then
             i=1
@@ -338,7 +365,7 @@ fn_frozen() {
                 elif [[ $status == *"frozen"* ]]; then
                     fn_status_msg err "Frozen"
                     fn_status_msg info "Trying to unfreeze, going to sleep"
-                    sleep 1
+                    sleep 1 #give some time to CTRL+C if wanted
                     rtcwake -m mem -s 5
                 fi
                 if [[ $i -ge $times ]];then
@@ -456,6 +483,7 @@ fn_ssd_erase() {
     hdparm --user-master u --security-unlock p /dev/$1 >> /dev/null
 }
 fn_verify() {
+        #Different methods for verifying disk, might be switched out by commenting current and uncommenting the prefered one.
         for device in ${devices[@]}; do
             fn_status_msg info "Verifying $device"
             #dd if=/dev/$device bs=8192 status=progress | hexdump
